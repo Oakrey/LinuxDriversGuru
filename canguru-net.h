@@ -14,6 +14,8 @@ struct canguru_channel_conf {
 	struct guru_send_reply *tx_reply_buff;
 	u8 tx_reply_max_count;
 	u8 channel_idx;
+	const u16 *termination_list;
+	u8 termination_count;
 };
 
 struct canguru_priv {

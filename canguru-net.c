@@ -4,14 +4,9 @@
 #include "canguru-msg-net.h"
 
 #define CANGURU_CAN_CLK 80000000
-#define CANGURU_TERMINATION_DISABLED CAN_TERMINATION_DISABLED
-#define CANGURU_TERMINATION_ENABLED 120
 #define CANGURU_100US_TO_1NS 100000
 #define CAN_STD_ID_MASK 0x7ffU
 #define CAN_EXT_ID_MASK 0x1fffffffU
-
-static const u16 canguru_termination[] = { CANGURU_TERMINATION_DISABLED,
-					   CANGURU_TERMINATION_ENABLED };
 
 static const struct can_bittiming_const canguru_bittiming_arb = {
 	.name = "canguru_arb",
@@ -108,7 +103,8 @@ struct __packed can_global_filter_msg {
 	bool extRemoteReject; /* Reject all extended remote frames */
 };
 
-static void canguru_init_can_priv(struct canguru_priv *priv);
+static void canguru_init_can_priv(struct canguru_priv *priv,
+				  const struct canguru_channel_conf *conf);
 static void canguru_set_conf(struct canguru_priv *priv,
 			     const struct canguru_channel_conf *conf);
 static int get_tx_fifo_free(struct canguru_priv *priv);
@@ -190,7 +186,7 @@ int canguru_net_create(struct net_device **new_dev,
 	priv = canguru_get_priv(netdev);
 	spin_lock_init(&priv->tx_lock);
 	canguru_set_conf(priv, conf);
-	canguru_init_can_priv(priv);
+	canguru_init_can_priv(priv, conf);
 	err = canguru_can_reset(priv);
 	if (err != 0) {
 		dev_err(conf->guru_dev->dev, "Unable to CAN reset (%d).\n",
@@ -325,12 +321,13 @@ void canguru_net_tx_finished(struct net_device *netdev, u32 fifo_mask)
 
 /* CanGuru net private methods implementation */
 
-static void canguru_init_can_priv(struct canguru_priv *priv)
+static void canguru_init_can_priv(struct canguru_priv *priv,
+				  const struct canguru_channel_conf *conf)
 {
 	priv->can.state = CAN_STATE_STOPPED;
 	priv->can.clock.freq = CANGURU_CAN_CLK;
-	priv->can.termination_const = canguru_termination;
-	priv->can.termination_const_cnt = ARRAY_SIZE(canguru_termination);
+	priv->can.termination_const = conf->termination_list;
+	priv->can.termination_const_cnt = conf->termination_count;
 	priv->can.bittiming_const = &canguru_bittiming_arb;
 	priv->can.fd.data_bittiming_const = &canguru_bittiming_data;
 	priv->can.ctrlmode_supported = CAN_CTRLMODE_LISTENONLY |
