@@ -333,8 +333,10 @@ static void canguru_init_can_priv(struct canguru_priv *priv,
 	priv->can.ctrlmode_supported = CAN_CTRLMODE_LISTENONLY |
 				       CAN_CTRLMODE_CC_LEN8_DLC |
 				       CAN_CTRLMODE_FD;
+	
+	if (conf->termination_count > 0 && conf->termination_list != NULL)
+		priv->can.do_set_termination = canguru_set_termination;
 
-	priv->can.do_set_termination = canguru_set_termination;
 	priv->can.do_set_mode = canguru_set_mode;
 	priv->can.do_set_bittiming = canguru_set_bittiming_nominal;
 	priv->can.fd.do_set_data_bittiming = canguru_set_bittiming_data;
