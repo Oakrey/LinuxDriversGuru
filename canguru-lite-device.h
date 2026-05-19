@@ -1,5 +1,5 @@
-#ifndef CANGURU_DEVICE_H
-#define CANGURU_DEVICE_H
+#ifndef CANGURU_LITE_DEVICE_H
+#define CANGURU_LITE_DEVICE_H
 
 #include "canguru-msg-net.h"
 #include "guru-device.h"
@@ -20,4 +20,4 @@ struct canguru_lite_device {
 int canguru_lite_dev_init(struct canguru_lite_device *self,
 			  struct usb_interface *intf, struct class *guru_class);
 
-#endif // CANGURU_DEVICE_H
+#endif // CANGURU_LITE_DEVICE_H
