@@ -131,4 +131,4 @@ module_exit(guru_drv_exit);
 MODULE_AUTHOR("Michal Kona <kona@oakrey.cz>");
 MODULE_DESCRIPTION("SocketCAN driver for Oakrey Guru devices");
 MODULE_VERSION(GURU_GIT_VERSION);
-MODULE_LICENSE("MIT");
+MODULE_LICENSE("GPL");
