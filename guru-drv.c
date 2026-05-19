@@ -63,7 +63,6 @@ static inline int guru_usb_device_alloc(struct usb_interface *intf)
 		err = canguru_hobby_dev_init(
 			(struct canguru_hobby_device *)guru_dev, intf,
 			guru_class);
-		
 	} else {
 		dev_info(&usbdev->dev, "Device ignored, not an Guru device\n");
 	}
