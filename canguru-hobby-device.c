@@ -1,17 +1,17 @@
-#include "canguru-device.h"
+#include "canguru-hobby-device.h"
 
 #include "canguru-net.h"
 
-static void canguru_dev_deinit(struct canguru_device *self);
+static void canguru_dev_deinit(struct canguru_hobby_device *self);
 
-int canguru_dev_init(struct canguru_device *self, struct usb_interface *intf,
-		     struct class *guru_class)
+int canguru_hobby_dev_init(struct canguru_hobby_device *self,
+			  struct usb_interface *intf, struct class *guru_class)
 {
 	struct canguru_channel_conf net_conf;
 	const struct canguru_msg_net_conf msg_conf = {
 		.guru_dev = &self->guru_dev,
 		.netdev = self->netdev,
-		.iface_count = CANGURU_CHANNEL_COUNT
+		.iface_count = CANGURU_HOBBY_CHANNEL_COUNT
 	};
 	int idx;
 	int err;
@@ -19,7 +19,7 @@ int canguru_dev_init(struct canguru_device *self, struct usb_interface *intf,
 	self->guru_dev.dev_data = self;
 	self->guru_dev.dev_deinit = (void (*)(void *))canguru_dev_deinit;
 
-	for (idx = 0; idx < CANGURU_CHANNEL_COUNT; idx++) {
+	for (idx = 0; idx < CANGURU_HOBBY_CHANNEL_COUNT; idx++) {
 		self->netdev[idx] = NULL;
 	}
 
@@ -30,9 +30,11 @@ int canguru_dev_init(struct canguru_device *self, struct usb_interface *intf,
 
 	net_conf.guru_dev = &self->guru_dev;
 	net_conf.msg = &self->can_msg_net;
-	net_conf.tx_reply_max_count = CANGURU_TX_FIFO_SIZE;
+	net_conf.tx_reply_max_count = CANGURU_HOBBY_TX_FIFO_SIZE;
+	net_conf.termination_list = NULL;
+	net_conf.termination_count = 0;
 
-	for (idx = 0; idx < CANGURU_CHANNEL_COUNT; idx++) {
+	for (idx = 0; idx < CANGURU_HOBBY_CHANNEL_COUNT; idx++) {
 		net_conf.channel_idx = idx;
 		net_conf.tx_reply_buff = self->tx_reply_buff[idx];
 		canguru_net_create(&self->netdev[idx], &net_conf);
@@ -46,11 +48,11 @@ int canguru_dev_init(struct canguru_device *self, struct usb_interface *intf,
 	return 0;
 }
 
-static void canguru_dev_deinit(struct canguru_device *self)
+static void canguru_dev_deinit(struct canguru_hobby_device *self)
 {
 	int idx;
 
-	for (idx = 0; idx < CANGURU_CHANNEL_COUNT; idx++) {
+	for (idx = 0; idx < CANGURU_HOBBY_CHANNEL_COUNT; idx++) {
 		canguru_net_destroy(&self->netdev[idx]);
 	}
 }

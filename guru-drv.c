@@ -1,5 +1,7 @@
 #include "guru-device.h"
-#include "canguru-device.h"
+
+#include "canguru-hobby-device.h"
+#include "canguru-lite-device.h"
 
 #include <linux/version.h>
 
@@ -8,7 +10,8 @@
 #define GURU_VENDOR_ID 0x1fc9
 #define GURU_PRODUCT_ID 0x008A
 
-#define CANGURU_PRODUCT_NAME "CAN Guru Lite"
+#define CANGURU_LITE_PRODUCT_NAME "CAN Guru Lite"
+#define CANGURU_HOBBY_PRODUCT_NAME "CAN Guru Hobby"
 
 static struct class *guru_class;
 
@@ -38,15 +41,28 @@ static inline int guru_usb_device_alloc(struct usb_interface *intf)
 	    0)
 		return err;
 
-	if (strcmp(buf, CANGURU_PRODUCT_NAME) == 0) {
+	if (strcmp(buf, CANGURU_LITE_PRODUCT_NAME) == 0) {
 		guru_usb_report(usbdev);
-		guru_dev = devm_kzalloc(
-			&intf->dev, sizeof(struct canguru_device), GFP_KERNEL);
+		guru_dev = devm_kzalloc(&intf->dev,
+					sizeof(struct canguru_lite_device),
+					GFP_KERNEL);
 		if (guru_dev == NULL) {
 			return -ENOMEM;
 		}
-		err = canguru_dev_init((struct canguru_device *)guru_dev, intf,
-				       guru_class);
+		err = canguru_lite_dev_init(
+			(struct canguru_lite_device *)guru_dev, intf,
+			guru_class);
+	} else if (strcmp(buf, CANGURU_HOBBY_PRODUCT_NAME) == 0) {
+		guru_usb_report(usbdev);
+		guru_dev = devm_kzalloc(&intf->dev,
+					sizeof(struct canguru_hobby_device),
+					GFP_KERNEL);
+		if (guru_dev == NULL) {
+			return -ENOMEM;
+		}
+		err = canguru_hobby_dev_init(
+			(struct canguru_hobby_device *)guru_dev, intf,
+			guru_class);
 	} else {
 		dev_info(&usbdev->dev, "Device ignored, not an Guru device\n");
 	}
