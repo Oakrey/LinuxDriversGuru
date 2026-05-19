@@ -10,7 +10,7 @@ ccflags-y += -Wall -Wextra -Wno-type-limits -Wno-unused-variable -Wno-unused-par
 KERNEL_VERSION := $(shell uname -r)
 LINUX_SRC_PATH ?= /lib/modules/$(KERNEL_VERSION)/build
 
-guru_drv-y := guru-drv.o guru-device.o canguru-device.o canguru-net.o guru-msg-std.o canguru-msg-net.o
+guru_drv-y := guru-drv.o guru-device.o canguru-lite-device.o canguru-net.o guru-msg-std.o canguru-msg-net.o
 
 MK_MOD_CMD := $(MAKE) -C $(LINUX_SRC_PATH) M=$(PWD) modules C=1
 
