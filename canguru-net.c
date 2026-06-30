@@ -3,6 +3,8 @@
 #include "guru-device.h"
 #include "canguru-msg-net.h"
 
+#include <linux/version.h>
+
 #define CANGURU_CAN_CLK 80000000
 #define CANGURU_100US_TO_1NS 100000
 #define CAN_STD_ID_MASK 0x7ffU
@@ -329,7 +331,11 @@ static void canguru_init_can_priv(struct canguru_priv *priv,
 	priv->can.termination_const = conf->termination_list;
 	priv->can.termination_const_cnt = conf->termination_count;
 	priv->can.bittiming_const = &canguru_bittiming_arb;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
+	priv->can.data_bittiming_const = &canguru_bittiming_data;
+#else
 	priv->can.fd.data_bittiming_const = &canguru_bittiming_data;
+#endif
 	priv->can.ctrlmode_supported = CAN_CTRLMODE_LISTENONLY |
 				       CAN_CTRLMODE_CC_LEN8_DLC |
 				       CAN_CTRLMODE_FD;
@@ -339,7 +345,11 @@ static void canguru_init_can_priv(struct canguru_priv *priv,
 
 	priv->can.do_set_mode = canguru_set_mode;
 	priv->can.do_set_bittiming = canguru_set_bittiming_nominal;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
+	priv->can.do_set_data_bittiming = canguru_set_bittiming_data;
+#else
 	priv->can.fd.do_set_data_bittiming = canguru_set_bittiming_data;
+#endif
 }
 
 static void canguru_set_conf(struct canguru_priv *priv,
@@ -555,11 +565,19 @@ static int canguru_set_bittiming_data(struct net_device *netdev)
 static int canguru_write_bittiming(struct canguru_priv *priv)
 {
 	const u32 prescaler = priv->can.bittiming.brp + 1;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
+	const u32 prescalerData = priv->can.data_bittiming.brp + 1;
+#else
 	const u32 prescalerData = priv->can.fd.data_bittiming.brp + 1;
+#endif
 	const struct can_conf_msg conf = {
 		.iface = priv->channel_idx,
 		.baudRateA = priv->can.bittiming.bitrate,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
+		.baudRateD = priv->can.data_bittiming.bitrate,
+#else
 		.baudRateD = priv->can.fd.data_bittiming.bitrate,
+#endif
 		.canFdEnable = (priv->can.ctrlmode & CAN_CTRLMODE_FD) != 0,
 		.canMode = (priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY) != 0 ?
 				   CAN_BUS_MONITORING :
@@ -572,10 +590,19 @@ static int canguru_write_bittiming(struct canguru_priv *priv)
 				   .idealTqNum = 0,
 				   .syncJumpWidth = priv->can.bittiming.sjw },
 		.timingData = { .samplePoint =
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
+					priv->can.data_bittiming.sample_point,
+#else
 					priv->can.fd.data_bittiming.sample_point,
+#endif
 				.idealTqNum = 0,
 				.syncJumpWidth =
-					priv->can.fd.data_bittiming.sjw }
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
+					priv->can.data_bittiming.sjw
+#else
+					priv->can.fd.data_bittiming.sjw
+#endif
+		}
 	};
 	int err;
 
@@ -584,11 +611,19 @@ static int canguru_write_bittiming(struct canguru_priv *priv)
 			CANGURU_CAN_CLK / prescaler /
 			priv->can.bittiming.bitrate;
 	}
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
+	if (priv->can.data_bittiming.bitrate != 0) {
+		timingConf.timingData.idealTqNum =
+			CANGURU_CAN_CLK / prescalerData /
+			priv->can.data_bittiming.bitrate;
+	}
+#else
 	if (priv->can.fd.data_bittiming.bitrate != 0) {
 		timingConf.timingData.idealTqNum =
 			CANGURU_CAN_CLK / prescalerData /
 			priv->can.fd.data_bittiming.bitrate;
 	}
+#endif
 	err = canguru_set_can_conf(priv, &conf);
 	if (err != 0) {
 		dev_warn(priv->guru_dev->dev, "Unable to set config CAN bus\n");
