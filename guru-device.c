@@ -249,10 +249,10 @@ resubmit:
 			  usb_rcvbulkpipe(self->usbdev, GURU_DATA_EP),
 			  urb->transfer_buffer, sizeof(struct guru_data),
 			  canguru_read_bulk_callback, self);
-
+	urb->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
 	usb_anchor_urb(urb, &self->rx_submitted);
-	err = usb_submit_urb(urb, GFP_ATOMIC);
 
+	err = usb_submit_urb(urb, GFP_ATOMIC);
 	if (err != 0) {
 		usb_unanchor_urb(urb);
 		dev_err(self->dev, "Failed resubmit read bulk: %d\n", err);
