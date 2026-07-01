@@ -106,8 +106,9 @@ int guru_send_data(struct guru_device *self, uint16_t id, const uint8_t *data,
 	usb_fill_bulk_urb(urb, self->usbdev,
 			  usb_sndbulkpipe(self->usbdev, GURU_DATA_EP), buf,
 			  msg_size, canguru_write_bulk_callback, self);
-
+	urb->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
 	usb_anchor_urb(urb, &self->tx_submitted);
+
 	err = usb_submit_urb(urb, GFP_ATOMIC);
 	if (err != 0) {
 		dev_err(self->dev, "Unable to submit URB TX (%d).\n", err);
